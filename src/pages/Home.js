@@ -4,9 +4,13 @@ import { GoPrimitiveDot } from 'react-icons/go';
 import { IoCallOutline } from 'react-icons/io5';
 import { IoIosSend } from 'react-icons/io';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/Authcontext';
 
 const Home = () => {
   const [friends, setFriends] = useState(null);
+  const { currentUser } = useAuth();
+
+  console.log(currentUser);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -18,8 +22,9 @@ const Home = () => {
     };
     fetchData();
   }, []);
+
   return (
-    <div className="flex">
+    <div className="flex h-screen">
       <div className="p-5 w-full sm:w-full md:w-full lg:w-1/4 max-h-screen overflow-x-scroll">
         {/* Header */}
         <div className="flex items-center justify-between">
