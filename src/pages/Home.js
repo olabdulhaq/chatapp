@@ -5,12 +5,50 @@ import { IoCallOutline } from 'react-icons/io5';
 import { IoIosSend } from 'react-icons/io';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/Authcontext';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '../service/Myfirebase';
 
 const Home = () => {
   const [friends, setFriends] = useState(null);
   const { currentUser } = useAuth();
 
   console.log(currentUser);
+
+  const getData = async () => {
+    const colRef = collection(db, 'friends');
+    const snapshot = await getDocs(colRef);
+    try {
+      const paddies = [];
+      snapshot.docs.forEach((doc) => {
+        paddies.push({ ...doc.data(), id: doc.id });
+        // console.log(doc.id, ' => ', doc.data());
+        console.log(paddies);
+      });
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+
+  getData();
+
+  // const colRef = collection(db, 'friends');
+  // getDocs(colRef)
+  //   .then((snapshot) => {
+  //     const paddies = [];
+  //     snapshot.docs.forEach((doc) => {
+  //       paddies.push({ ...doc.data(), id: doc.id });
+  //       // console.log(doc.id, ' => ', doc.data());
+  //       console.log(paddies);
+  //     });
+  //     // console.log(paddies);
+  //   })
+  //   .catch((err) => {
+  //     console.log(err.message);
+  //   });
+
+  // const handleAddFriends = (e) => {
+  //   addDoc(colRef);
+  // };
 
   useEffect(() => {
     const fetchData = async () => {
