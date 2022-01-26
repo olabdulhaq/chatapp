@@ -1,0 +1,10 @@
+.main-container {
+  height: calc(100vh - 80px);
+  overflow: hidden;
+}
+
+.truncate {
+  width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -2,69 +2,119 @@ import React, { useEffect, useState } from 'react';
 import { HiOutlinePencilAlt, HiOutlineSearch } from 'react-icons/hi';
 import { GoPrimitiveDot } from 'react-icons/go';
 import { IoCallOutline } from 'react-icons/io5';
-import { IoIosSend } from 'react-icons/io';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/Authcontext';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
-import { db } from '../service/Myfirebase';
+// import { useAuth } from '../contexts/Authcontext';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+  Timestamp,
+  orderBy,
+  setDoc,
+  doc,
+  getDoc,
+  updateDoc,
+} from 'firebase/firestore';
+import { auth, db, storage } from '../service/Myfirebase';
+
+import User from '../components/User';
+import MessageForm from '../components/MessageForm';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import Message from '../components/Message';
 
 const Home = () => {
-  const [friends, setFriends] = useState(null);
-  const { currentUser } = useAuth();
+  const [chat, setChat] = useState('');
+  const [users, setUsers] = useState([]);
+  const [text, setText] = useState('');
+  const [img, setImg] = useState('');
+  const [msgs, setMsgs] = useState([]);
+  // const { currentUser } = useAuth();
 
-  console.log(currentUser);
+  const user1 = auth.currentUser.uid;
 
-  const getData = async () => {
-    const colRef = collection(db, 'friends');
-    const snapshot = await getDocs(colRef);
-    try {
-      const paddies = [];
-      snapshot.docs.forEach((doc) => {
-        paddies.push({ ...doc.data(), id: doc.id });
-        // console.log(doc.id, ' => ', doc.data());
-        console.log(paddies);
+  useEffect(() => {
+    const userRef = collection(db, 'users');
+
+    const q = query(userRef, where('uid', 'not-in', [user1]));
+
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      let users = [];
+      querySnapshot.forEach((doc) => {
+        users.push(doc.data());
       });
-    } catch (err) {
-      console.log(err.message);
+      setUsers(users);
+    });
+    return () => unsub;
+  }, []);
+
+  const selectUser = async (user) => {
+    setChat(user);
+
+    const user2 = user.uid;
+    const id = user1 > user2 ? `${user1 + user2}` : `${user2 + user1}`;
+
+    const msgsRef = collection(db, 'Messages', id, 'Chat');
+    const q = query(msgsRef, orderBy('createdAt', 'asc'));
+
+    onSnapshot(q, (querySnapshot) => {
+      let msgs = [];
+      querySnapshot.forEach((doc) => {
+        msgs.push(doc.data());
+      });
+      setMsgs(msgs);
+    });
+
+    const docSnap = await getDoc(doc(db, 'lastMsg', id));
+    if (docSnap.data()?.from !== user1) {
+      await updateDoc(doc(db, 'lastMsg', id), {
+        unread: false,
+      });
     }
   };
 
-  getData();
+  console.log('ff0', msgs);
 
-  // const colRef = collection(db, 'friends');
-  // getDocs(colRef)
-  //   .then((snapshot) => {
-  //     const paddies = [];
-  //     snapshot.docs.forEach((doc) => {
-  //       paddies.push({ ...doc.data(), id: doc.id });
-  //       // console.log(doc.id, ' => ', doc.data());
-  //       console.log(paddies);
-  //     });
-  //     // console.log(paddies);
-  //   })
-  //   .catch((err) => {
-  //     console.log(err.message);
-  //   });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // const handleAddFriends = (e) => {
-  //   addDoc(colRef);
-  // };
+    const user2 = chat.uid;
+    const id = user1 > user2 ? `${user1 + user2}` : `${user2 + user1}`;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch('http://localhost:8080/profile');
-      const data = await res.json();
+    let url;
+    if (img) {
+      const imgRef = ref(
+        storage,
+        `images/${new Date().getTime()} - ${img.name}`
+      );
+      const snap = await uploadBytes(imgRef, img);
+      const durl = await getDownloadURL(ref(storage, snap.ref.fullPath));
+      url = durl;
+    }
+    await addDoc(collection(db, 'Messages', id, 'Chat'), {
+      text,
+      from: user1,
+      to: user2,
+      createdAt: Timestamp.fromDate(new Date()),
+      media: url || '',
+    });
 
-      console.log(data.friends);
-      setFriends(data.friends);
-    };
-    fetchData();
-  }, []);
+    await setDoc(doc(db, 'lastMsg', id), {
+      text,
+      from: user1,
+      to: user2,
+      createdAt: Timestamp.fromDate(new Date()),
+      media: url || '',
+      unread: true,
+    });
+    setText('');
+  };
 
   return (
-    <div className="flex h-screen">
-      <div className="p-5 w-full sm:w-full md:w-full lg:w-1/4 max-h-screen overflow-x-scroll">
-        {/* Header */}
+    <div className="main-container flex">
+      {/* <div className="bg-red-500 w-2/6 mr-1 p-3"> */}
+      <div className="p-5 w-full sm:w-full md:w-full lg:w-1/4 overflow-x-scroll">
         <div className="flex items-center justify-between">
           <h1>
             Messages{' '}
@@ -76,7 +126,6 @@ const Home = () => {
             <HiOutlinePencilAlt />
           </div>
         </div>
-
         {/* search */}
         <div className="my-4 flex items-center">
           <input
@@ -87,97 +136,78 @@ const Home = () => {
           <HiOutlineSearch />
         </div>
 
-        {Array.isArray(friends) &&
-          friends.map((friend) => (
-            <figure key={friend.id} className="mt-3">
-              <figcaption className="flex items-center">
-                <img
-                  src={friend.picture}
-                  alt="user"
-                  className="h-8 w-8 rounded-full mr-3"
-                />
-                <div>
-                  <h2 className="text-sm">{friend.name}</h2>
-                  <p className="text-xs font-light">{friend.lastChat}</p>
-                </div>
-                <div className="ml-auto">
-                  <p className="text-xs">{friend.latest_timestamp}</p>
-                  <p className="text-xs text-center w-auto h-auto p-0.5 flex items-center justify-center bg-green-500 text-white rounded-full">
-                    2
-                  </p>
-                </div>
-              </figcaption>
-            </figure>
-          ))}
+        {users.map((user) => (
+          <User
+            key={user.uid}
+            user={user}
+            selectUser={selectUser}
+            user1={user1}
+            chat={chat}
+          />
+        ))}
       </div>
 
-      <div className="p-5 flex-grow-0 sm:flex-grow-0 md:flex-grow-0 lg:flex-grow border hidden sm:hidden md:hidden lg:flex flex-col border-gray-200 min-h-screen">
-        <div>
-          <div className="flex border-b border-gray-300 pb-4">
-            <figure>
-              <figcaption className="flex items-center">
-                <img
-                  src="https://image.ibb.co/j4Ov3b/darth_vader_1.png"
-                  alt="friend pic"
-                  className="h-8 w-8 rounded-full mr-3"
-                />
-                <div className="flex items-center">
-                  <h2 className="text-sm">darth vader</h2>
-                  <div className="text-xs font-light flex items-center ml-2 bg-green-300 py-0.5 px-2">
-                    <GoPrimitiveDot style={{ color: 'green' }} />
-                    <p>online</p>
+      <div className="p-5 flex-grow-0 sm:flex-grow-0 md:flex-grow-0 lg:flex-grow border hidden sm:hidden md:hidden lg:flex flex-col border-gray-200">
+        <div className="w-full">
+          {chat ? (
+            <div className="flex h-14 border-b border-gray-300 pb-4">
+              <figure>
+                <figcaption className="flex items-center">
+                  <img
+                    src={chat.avatar}
+                    alt="friend pic"
+                    className="h-8 w-8 rounded-full mr-3"
+                  />
+                  <div className="flex items-center">
+                    <h2 className="text-sm">{chat.name}</h2>
+                    <div className="text-xs font-light flex items-center ml-2 bg-green-300 py-0.5 px-2">
+                      <GoPrimitiveDot style={{ color: 'green' }} />
+                      <p>online</p>
+                    </div>
                   </div>
-                </div>
-              </figcaption>
-            </figure>
-            <ul className="ml-auto flex items-center">
-              <li className="flex items-center ml-2 p-1 bg-gray-200 rounded-lg text-purple-primary">
-                <Link to="/">
-                  <IoCallOutline />
-                  <span className="ml-1 text-sm">Call</span>
-                </Link>
-              </li>
-              <li className="ml-2 p-1 border text-sm border-gray-300 rounded-lg">
-                <Link to="/">Archieve</Link>
-              </li>
-              <li className="ml-2 p-1 rounded-lg text-white text-sm bg-purple-secondary">
-                <Link to="/">view profile</Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="mb-auto mt-6">
-          <div className="flex flex-row-reverse mb-4">
-            <img
-              src="https://image.ibb.co/j4Ov3b/darth_vader_1.png"
-              alt="user"
-              className="h-8 w-8 rounded-full ml-3"
-            />
-            <div className="bg-purple-secondary p-2 text-white rounded-tl-xl rounded-bl-xl rounded-br-xl">
-              <p>I thought that the event was over long</p>
+                </figcaption>
+              </figure>
+              <ul className="ml-auto flex items-center">
+                <li className="flex items-center ml-2 p-1 bg-gray-200 rounded-lg text-purple-primary">
+                  <Link to="/">
+                    <IoCallOutline />
+                    <span className="ml-1 text-sm">Call</span>
+                  </Link>
+                </li>
+                <li className="ml-2 p-1 rounded-lg text-white text-sm bg-purple-secondary">
+                  <Link to="/profile">view profile</Link>
+                </li>
+                <li className="ml-2 p-1 border text-sm border-gray-300 rounded-lg">
+                  <Link to="/">Profile</Link>
+                </li>
+              </ul>
             </div>
-          </div>
-          <div className="flex mb-4">
-            <img
-              src="https://image.ibb.co/j4Ov3b/darth_vader_1.png"
-              alt="user"
-              className="h-8 w-8 rounded-full mr-3"
-            />
-            <div className="bg-purple-primary p-2 text-white rounded-tr-xl rounded-br-xl rounded-bl-xl">
-              <p>Not quite the same</p>
-            </div>
-          </div>
+          ) : (
+            <div></div>
+          )}
         </div>
-        <div className="flex">
-          <input
-            type="text"
-            placeholder="say something"
-            className="w-full p-2 border border-gray-400"
-          />
-          <button className="bg-purple-secondary p-3 ml-2">
-            <IoIosSend style={{ fontSize: '20px', color: 'white' }} />
-          </button>
-        </div>
+
+        {/* chatbox */}
+        {chat ? (
+          <div className="overflow-y-scroll">
+            {msgs.length
+              ? msgs.map((msg, i) => (
+                  <Message key={i} msg={msg} user1={user1} />
+                ))
+              : null}
+          </div>
+        ) : (
+          <div className="flex h-full justify-center items-center">
+            Select a user to start a conversation
+          </div>
+        )}
+
+        <MessageForm
+          handleSubmit={handleSubmit}
+          text={text}
+          setText={setText}
+          setImg={setImg}
+        />
       </div>
     </div>
   );

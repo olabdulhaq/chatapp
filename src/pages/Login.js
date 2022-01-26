@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/Authcontext';
+import { Authcontext } from '../contexts/Authcontext';
+import { db } from '../service/Myfirebase';
 // import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 const Login = () => {
@@ -8,7 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useContext(Authcontext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -16,8 +18,11 @@ const Login = () => {
 
     setError('');
     try {
-      setLoading(false);
-      await login(email, password);
+      setLoading(true);
+      const result = await login(email, password);
+      await updateDoc(doc(db, 'users', result.user.uid), {
+        isOnline: true,
+      });
       navigate('/');
     } catch (err) {
       setLoading(false);
@@ -52,7 +57,7 @@ const Login = () => {
           </button>
         )}
         {loading && (
-          <button className="mt-6 py-2 px-5 disabled:opacity-75 text-white rounded-md hover:scale-105 active:bg-orange-400">
+          <button className="mt-6 py-2 px-5 bg-orange-300 text-white rounded-md hover:scale-105 active:bg-orange-400">
             Login...
           </button>
         )}

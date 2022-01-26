@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/Authcontext';
+import { Authcontext } from '../contexts/Authcontext';
+import { db } from '../service/Myfirebase';
 
 const Signup = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup } = useContext(Authcontext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -16,11 +19,18 @@ const Signup = () => {
     setError('');
     try {
       setLoading(true);
-      await signup(email, password);
+      const result = await signup(email, password);
+      await setDoc(doc(db, 'users', result.user.uid), {
+        uid: result.user.uid,
+        email,
+        name,
+        createdAt: Timestamp.fromDate(new Date()),
+        isOnline: false,
+      });
       navigate('/login');
     } catch (err) {
       setError(err.message);
-      setLoading(true);
+      setLoading(false);
     }
   };
 
@@ -29,6 +39,14 @@ const Signup = () => {
       <h2 className="text-center">Signup</h2>
       {error && <h3>{error}</h3>}
       <form onSubmit={handleSubmit}>
+        <div className="mt-6">
+          <input
+            type="text"
+            placeholder="Name"
+            className="p-3 bg-gray-200 w-full"
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
         <div className="mt-6">
           <input
             type="email"
