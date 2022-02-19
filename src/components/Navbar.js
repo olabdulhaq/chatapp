@@ -22,13 +22,17 @@ const Navbar = () => {
 
   return (
     <header className="flex items-center w-full h-20 p-3 bg-purple-primary">
-      <h2 className="uppercase mr-auto">chatapp</h2>
+      <h2 className="uppercase mr-auto text-white">
+        <Link to="/">chatapp</Link>
+      </h2>
       <div>
         {user ? (
           <>
-            {/* <Link to="/signup" className="mr-6">
+            <Link
+              to="/profile"
+              className="mr-6 py-1 px-3 text-white border border-gray-300 rounded-lg">
               Profile
-            </Link> */}
+            </Link>
             <button
               onClick={handleLogout}
               className="bg-orange-600 text-white rounded-md hover:scale-105 active:bg-orange-500 py-1 px-3">
@@ -37,7 +41,11 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <Link to="/signup">Register</Link>
+            <Link
+              to="/signup"
+              className="py-1 px-3 text-white border border-gray-300 rounded-lg">
+              Register
+            </Link>
           </>
         )}
       </div>

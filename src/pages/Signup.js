@@ -3,6 +3,7 @@ import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Authcontext } from '../contexts/Authcontext';
 import { db } from '../service/Myfirebase';
+import { TailSpin } from 'react-loader-spinner';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -36,14 +37,14 @@ const Signup = () => {
 
   return (
     <div className="w-2/4 h-2/4 p-5 my-20 mx-auto border border-gray-400 rounded-md">
-      <h2 className="text-center">Signup</h2>
+      <h2 className="text-center uppercase text-xl">Signup</h2>
       {error && <h3>{error}</h3>}
       <form onSubmit={handleSubmit}>
         <div className="mt-6">
           <input
             type="text"
             placeholder="Name"
-            className="p-3 bg-gray-200 w-full"
+            className="p-3 bg-gray-200 w-full outline-none border focus:border focus:border-purple-primary"
             onChange={(e) => setName(e.target.value)}
           />
         </div>
@@ -51,7 +52,7 @@ const Signup = () => {
           <input
             type="email"
             placeholder="email"
-            className="p-3 bg-gray-200 w-full"
+            className="p-3 bg-gray-200 w-full outline-none border focus:border focus:border-purple-primary"
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
@@ -59,7 +60,7 @@ const Signup = () => {
           <input
             type="password"
             placeholder="passowrd"
-            className="p-3 bg-gray-200 w-full"
+            className="p-3 bg-gray-200 w-full outline-none border focus:border focus:border-purple-primary"
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
@@ -68,11 +69,7 @@ const Signup = () => {
             Signup
           </button>
         )}
-        {loading && (
-          <button className="mt-6 py-2 px-5 disabled:opacity-75 text-white rounded-md hover:scale-105 active:bg-orange-400">
-            Signup...
-          </button>
-        )}
+        {loading && <TailSpin ariaLabel="loading-indicator" color="#7F6D9F" />}
       </form>
       <p>
         Already have an account?{' '}

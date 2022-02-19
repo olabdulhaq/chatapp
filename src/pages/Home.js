@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { HiOutlinePencilAlt, HiOutlineSearch } from 'react-icons/hi';
 import { GoPrimitiveDot } from 'react-icons/go';
-import { IoCallOutline } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
+import InputEmoji from 'react-input-emoji';
+// import { IoCallOutline } from 'react-icons/io5';
+// import { Link } from 'react-router-dom';
 // import { useAuth } from '../contexts/Authcontext';
 import {
   collection,
@@ -74,8 +75,6 @@ const Home = () => {
     }
   };
 
-  console.log('ff0', msgs);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -114,13 +113,14 @@ const Home = () => {
   return (
     <div className="main-container flex">
       {/* <div className="bg-red-500 w-2/6 mr-1 p-3"> */}
-      <div className="p-5 w-full sm:w-full md:w-full lg:w-1/4 overflow-x-scroll">
+      {/* <div className="p-5 w-full sm:w-full md:w-full lg:w-1/4 overflow-x-scroll"> */}
+      <div className="p-5 w-1/4 overflow-x-scroll">
         <div className="flex items-center justify-between">
           <h1>
-            Messages{' '}
-            <span className="bg-slate-300 rounded-full p-1 w-3 h-3 text-xs font-light">
+            Chats{' '}
+            {/* <span className="bg-slate-300 rounded-full p-1 w-3 h-3 text-xs font-light">
               35
-            </span>
+            </span> */}
           </h1>
           <div className="border border-gray-300 p-1 rounded-lg">
             <HiOutlinePencilAlt />
@@ -131,9 +131,9 @@ const Home = () => {
           <input
             type="text"
             placeholder="Search"
-            className="w-full py-0.5 px-4 -mr-8 border border-gray-300 rounded-2xl"
+            className="w-full py-0.5 px-4 -mr-8 border border-gray-300 rounded-2xl outline-none placeholder:text-sm md:placeholder:text-base lg:placeholder:text-base"
           />
-          <HiOutlineSearch />
+          <HiOutlineSearch className="text-sm md:text-base lg:text-base text-gray-500" />
         </div>
 
         {users.map((user) => (
@@ -147,7 +147,8 @@ const Home = () => {
         ))}
       </div>
 
-      <div className="p-5 flex-grow-0 sm:flex-grow-0 md:flex-grow-0 lg:flex-grow border hidden sm:hidden md:hidden lg:flex flex-col border-gray-200">
+      {/* <div className="p-5 flex-grow-0 sm:flex-grow-0 md:flex-grow-0 lg:flex-grow border hidden sm:hidden md:hidden lg:flex flex-col border-gray-200"> */}
+      <div className="p-5 flex-grow border flex flex-col border-gray-200">
         <div className="w-full">
           {chat ? (
             <div className="flex h-14 border-b border-gray-300 pb-4">
@@ -160,14 +161,21 @@ const Home = () => {
                   />
                   <div className="flex items-center">
                     <h2 className="text-sm">{chat.name}</h2>
-                    <div className="text-xs font-light flex items-center ml-2 bg-green-300 py-0.5 px-2">
-                      <GoPrimitiveDot style={{ color: 'green' }} />
-                      <p>online</p>
-                    </div>
+                    {chat.isOnline ? (
+                      <div className="text-xs font-light flex items-center ml-2 bg-green-300 py-0.5 px-2">
+                        <GoPrimitiveDot style={{ color: 'green' }} />
+                        <p>online</p>
+                      </div>
+                    ) : (
+                      <div className="text-xs font-light flex items-center ml-2 bg-gray-200 py-0.5 px-2">
+                        <GoPrimitiveDot style={{ color: 'gray' }} />
+                        <p>offline</p>
+                      </div>
+                    )}
                   </div>
                 </figcaption>
               </figure>
-              <ul className="ml-auto flex items-center">
+              {/* <ul className="ml-auto flex items-center">
                 <li className="flex items-center ml-2 p-1 bg-gray-200 rounded-lg text-purple-primary">
                   <Link to="/">
                     <IoCallOutline />
@@ -180,7 +188,7 @@ const Home = () => {
                 <li className="ml-2 p-1 border text-sm border-gray-300 rounded-lg">
                   <Link to="/">Profile</Link>
                 </li>
-              </ul>
+              </ul> */}
             </div>
           ) : (
             <div></div>
@@ -192,7 +200,7 @@ const Home = () => {
           <div className="overflow-y-scroll">
             {msgs.length
               ? msgs.map((msg, i) => (
-                  <Message key={i} msg={msg} user1={user1} />
+                  <Message key={i} msg={msg} user1={user1} chat={chat} />
                 ))
               : null}
           </div>
@@ -201,13 +209,16 @@ const Home = () => {
             Select a user to start a conversation
           </div>
         )}
-
-        <MessageForm
-          handleSubmit={handleSubmit}
-          text={text}
-          setText={setText}
-          setImg={setImg}
-        />
+        {chat ? (
+          <div className="relative">
+            <MessageForm
+              handleSubmit={handleSubmit}
+              text={text}
+              setText={setText}
+              setImg={setImg}
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

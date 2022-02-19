@@ -3,6 +3,10 @@
   overflow: hidden;
 }
 
+.message__form {
+  width: calc(95vw - 25%);
+}
+
 .truncate {
   width: 90%;
   overflow: hidden;

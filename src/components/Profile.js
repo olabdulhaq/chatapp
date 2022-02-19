@@ -1,4 +1,3 @@
-import { getAuth } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import {
   deleteObject,
@@ -7,7 +6,7 @@ import {
   uploadBytes,
 } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
-import { MdAddAPhoto, MdDelete, MdAdd } from 'react-icons/md';
+import { MdDelete, MdAdd } from 'react-icons/md';
 import { auth, db, storage } from '../service/Myfirebase';
 
 const Profile = () => {

@@ -13,11 +13,11 @@ const User = ({ user, selectUser, user1, chat }) => {
     });
     return () => unsub;
   }, []);
-  console.log(data);
+
   return (
     <figure
       key={user.id}
-      className={`mt-3 p-3 ${chat.name === user.name && 'bg-gray-400'}`}
+      className={`mt-3 p-2 ${chat.name === user.name && 'bg-gray-200'}`}
       onClick={() => selectUser(user)}>
       <figcaption className="flex items-center">
         <img
@@ -26,14 +26,11 @@ const User = ({ user, selectUser, user1, chat }) => {
           className="h-8 w-8 rounded-full mr-3"
         />
         <div>
-          <h2 className="text-sm">{user.name}</h2>
-          {/* <p className="text-xs font-light">{user.lastChat}</p> */}
+          <h2 className="hidden md:block lg:block text-sm">{user.name}</h2>
         </div>
         <div className="ml-auto">
           <p className="text-xs">{user.latest_timestamp}</p>
-          {/* <p className="text-xs text-center w-auto h-auto p-0.5 flex items-center justify-center bg-green-500 text-white rounded-full">
-                    2
-                  </p> */}
+
           {data?.from !== user1 && data?.unread && (
             <small className="bg-blue-700 text-white rounded-lg py-0.5 px-1">
               New
@@ -46,7 +43,11 @@ const User = ({ user, selectUser, user1, chat }) => {
             }`}></div>
         </div>
       </figcaption>
-      {data && <p className="truncate whitespace-nowrap">{data.text}</p>}
+      {data && (
+        <p className="text-sm truncate whitespace-nowrap hidden sm:hidden md:block lg:block">
+          {data.text}
+        </p>
+      )}
     </figure>
   );
 };
